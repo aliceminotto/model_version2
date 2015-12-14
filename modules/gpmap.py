@@ -12,6 +12,7 @@ def g_p_mapa(host,path):
                     sn=1.0
                     break
         dic_tar[target]=sn
+    #print dic_tar
     return dic_tar
 
 def g_p_mapa2(host,path,so):
