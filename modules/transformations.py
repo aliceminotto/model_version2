@@ -1,5 +1,7 @@
 import itertools as itr
 from numpy import random as rk
+import modA as mda
+import math
 
 #muation,deletion,dulication,hgt,add-lose target
 def deepcopy(dictionary):
@@ -49,10 +51,55 @@ def duplication(pathogen,eff):
     new_pathogen[l]=pathogen[eff].copy()
     return new_pathogen
 
-def hgt(pathogen,newhost,nto,k):
+def hgt(pathogen,nto,k):
     new_pathogen=deepcopy(pathogen)
     l=max(new_pathogen.keys())+1
     new_pathogen[l]={}
     lj=rk.randint(1,nto+1) #number of targeted genes
-    new_pathogen[l]=dict(itr.izip(newhost.NEWHOST(lj,k),rk.random(lj)))
+    new_pathogen[l]=dict(itr.izip(mda.newhost.NEWHOST(lj,k),rk.random(lj)))
     return new_pathogen
+
+def probabilities(pathogen,host,rates,pop):
+    dic_prob={} #keys are eff, values are probabilities
+    #print pathogen
+    #print mda.gpmap.g_p_mapa(host,pathogen)
+    av_score_tar=sum(mda.gpmap.g_p_mapa(host,pathogen).values())/float(len(host))
+    #print av_score_tar
+    mda.gpmap.g_p_mapb(host,pathogen)
+    for effector in pathogen.eff:
+        dic_prob[effector]=[rates[0]*pop,rates[1]*(1-av_score_tar)*pop,
+                            (rates[2]*pop)*math.exp(-effector.g_score),rates[3]*pop/len(pathogen.eff),
+                            pop*((1-rates[0])+(1-rates[1])*(1-av_score_tar)+1-(rates[2]*
+                            math.exp(-effector.g_score))+1-(rates[3]/len(pathogen.eff)))]
+    return dic_prob
+
+def events(dic_prob):
+    appening={}
+    for effector in dic_prob:
+        k=rk.random()
+        sum_prob=sum(dic_prob[effector])
+        n=0
+        alfa=k*sum_prob
+        som=0.0
+        for i in dic_prob[effector]:
+            som+=i
+            if som>=alfa:
+                break
+            n+=1
+        appening[effector]=n
+    return appening
+
+def transform(pathogen,appening,K,mu1,mu2,nto):
+    for effector in pathogen:
+        event=appening[effector]
+        if event==4:
+            pass
+        elif event==0:
+            pathogen=mutation(pathogen,effector,K,mu1,mu2)
+        elif event==1:
+            pathogen=duplication(pathogen,effector)
+        elif event==2:
+            pathogen=deletion(pathogen,effector)
+        elif event==3:
+            pathogen=hgt(pathogen,nto,K)
+    return pathogen

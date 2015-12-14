@@ -15,7 +15,7 @@ def g_p_mapa(host,path):
     #print dic_tar
     return dic_tar
 
-def g_p_mapa2(host,path,so):
+def g_p_mapa2(host,path,so): #still to do this
     dic_tar={}
     for target in host:
         sn=0.0
@@ -26,11 +26,10 @@ def g_p_mapa2(host,path,so):
     return dic_tar
 
 def g_p_mapb(host,path):
-    dic_eff={}
-    for effector in path:
+    for effector in path.eff:
         sn=0.0
-        for target in path[effector]:
+        for target in effector.targets:
             if target in host:
-                sn+=path[effector][target]
-        dic_eff[effector]=sn
-    return dic_eff
+                sn+=effector.targets[target]
+        effector.g_score=sn
+    return 

@@ -79,10 +79,55 @@ def jumps(j,rngseed,par):
     #path_genomes={}
     #path_genomes[0]=pathogen_dic
     for t in xrange(par[0]*par[7]):
+        jn=0
+        rmax=max([el.r for el in strains])
+        print rmax
         for el in strains:
             if el.size[-1]>=0:
-                print t,el
-                el.pop_dyn(mda.population.N_calc(strains,el,el.size[-1],par[8])) 
+                #print t,el
+                mda.transformations.probabilities(el,Hn[jn],par[6],el.size[-1])
+                # ^ pathogen,host,rates,pop Jn needs to be the right host
+                el.pop_dyn(mda.population.N_calc(strains,el,el.size[-1],par[8]))
+
+    '''
+    for t in xrange(par[0]*par[8]):-
+        jn=0
+        print t-
+        rmax=max(path_r.values())-
+        rnj=int(max(path_pop.keys()))+1
+        npflag=0
+        npops=[]
+        for el in path_pop:-
+
+            if path_pop[el][1][-1]>=0:-
+                path_probs[el]={}
+                path_probs[el]=mda.transformations.probabilities(path_genomes[el],Hn[jn],par[7],path_pop[el][1][-1]) #pathogen,host,rates,pop
+                events[el]={}
+                events[el]=mda.transformations.events(path_probs[el]);
+                if any(ev in events[el].values() for ev in evitems):
+                    npthaux1={}
+                    npthaux1=mda.transformations.transform(path_genomes[el],events[el],par[1],par[5],par[6],par[4])
+                    raux=sum(mda.gpmap.g_p_mapa(Hn[jn],npthaux1).values())/float(len(Hn[jn]))
+                    if raux>rmax:
+                        path_r[rnj]=raux
+                        path_genomes[rnj]=npthaux1
+                        npops.append(rnj)
+                        rnj+=1
+                        npflag=1
+        if npflag!=0:
+            for jk in npops:
+                path_pop[jk]=[t,[10]]
+
+        for el in path_pop:
+
+            if path_pop[el][1][-1]>=0:
+                #print t,el
+                path_pop[el][1].append(mda.population.N_calc(path_pop,path_r,el,path_pop[el][1][-1],par[9]))
+
+    pickle.dump( path_pop, open( "testpops.p", "wb" ) )
+    pickle.dump( path_r, open( "r.p", "wb" ) )
+    print("test completed")
+    '''
 
 def main(): #parallelize
     seeds=[]
