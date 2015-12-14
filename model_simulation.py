@@ -11,27 +11,32 @@ import math as mth
 import pickle
 import numpy as np
 from numpy import random as rng
-import modA as mda
+#import modA as mda
 
 class Genome:
-    def __init__(self,effectors):
+    def __init__(self,effectors,time0,size): #effector is a set
         self.eff=effectors
-        self.eff=[]
-        self.children={} #child:time
+        self.children=set() #changed from dict cause each genome has .t
+        self.t=time0
+        self.size=size
 
-    def add_effector(eff):
-        self.eff.append(eff)
+    def add_effector(self,eff):
+        assert eff not in self.eff
+        self.eff.add(eff)
 
-    def child(genome,t): #needs new genome and time of creation
-        self.children[genome]=t
+    def child(self,genome): #needs new genome
+        self.children.add(genome)
+
+    def pop_dyn(self,new_size):
+        self.size=new_size
 
 class EffectorGene:
     def __init__(self):
         self.g_score=0.0 #global score
         self.targets={} #dictionary with targets and their score
 
-    def add_target(tar,s): #need target and its score, works also to change score
+    def add_target(self,tar,s): #need target and its score, works also to change score
         self.targets[tar]=s
 
-    def remove_target(tar): #needs target
+    def remove_target(self,tar): #needs target
         del self.target[tar]
