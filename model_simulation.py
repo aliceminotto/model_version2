@@ -18,7 +18,11 @@ class Genome:
         self.eff=effectors
         self.children=set() #changed from dict cause each genome has .t
         self.t=time0
-        self.size=size
+        self.size=[size]
+        self.r=None
+
+    def set_r(self,r):
+        self.r=r
 
     def add_effector(self,eff):
         assert eff not in self.eff
@@ -28,7 +32,7 @@ class Genome:
         self.children.add(genome)
 
     def pop_dyn(self,new_size):
-        self.size=new_size
+        self.size.append(new_size)
 
 class EffectorGene:
     def __init__(self):
@@ -49,6 +53,8 @@ def jumps(j,rngseed,par):
     #par[4] max numb of target per effector gene
     #par[5] mu1,mu2
     #par[6] rates
+    T=0 #start of simulation
+    strains=set()
     Hn={} #host dictionary
     rng.seed(rngseed)
     for jn in xrange(par[0]):
@@ -56,22 +62,27 @@ def jumps(j,rngseed,par):
         u=mda.newhost.NEWHOST(l,par[1])
         Hn[jn]=u
     r=0.0
-    j=0
+    #j=0
     while r<=.5:
-        j+=1
-        pathogen_dic=mda.newhost.NEWPATHOGEN(par[1],par[3],par[4],0,10)
+        #j+=1
+        pathogen_dic=mda.newhost.NEWPATHOGEN(par[1],par[3],par[4],T,10)
         r=sum(mda.gpmap.g_p_mapa(Hn[0],pathogen_dic).values())/float(len(Hn[0]))
-    '''path_pop={}
-    path_pop[0]=[0,[10]]
-    path_r={}
-    path_r[0]=r
-    path_genomes={}
-    path_genomes[0]=pathogen_dic
+        #print r
+        #for effector in pathogen_dic.eff:
+        #    print effector.targets.keys()
+    pathogen_dic.set_r(r)
+    strains.add(pathogen_dic)
+    #path_pop={}
+    #path_pop[0]=[0,[10]]
+    #path_r={}
+    #path_r[0]=r
+    #path_genomes={}
+    #path_genomes[0]=pathogen_dic
     for t in xrange(par[0]*par[7]):
-        for el in path_pop:
-            if path_pop[el][1][-1]>=0:
+        for el in strains:
+            if el.size[-1]>=0:
                 print t,el
-                path_pop[el][1].append(mda.population.N_calc(path_pop,path_r,el,path_pop[el][1][-1],par[8]))'''
+                el.pop_dyn(mda.population.N_calc(path_pop,path_r,el,path_pop[el][1][-1],par[8])) ####
 
 def main(): #parallelize
     seeds=[]
