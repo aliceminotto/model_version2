@@ -82,7 +82,7 @@ def jumps(j,rngseed,par):
         for el in strains:
             if el.size[-1]>=0:
                 print t,el
-                el.pop_dyn(mda.population.N_calc(path_pop,path_r,el,path_pop[el][1][-1],par[8])) ####
+                el.pop_dyn(mda.population.N_calc(strains,el,el.size[-1],par[8])) 
 
 def main(): #parallelize
     seeds=[]
