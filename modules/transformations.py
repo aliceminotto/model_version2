@@ -2,62 +2,84 @@ import itertools as itr
 from numpy import random as rk
 import modA as mda
 import math
+from model_simulation import Genome as Genome
+from model_simulation import EffectorGene as EffectorGene
 
 #muation,deletion,dulication,hgt,add-lose target
-def deepcopy(dictionary):
+'''def deepcopy(dictionary):
     new_dic={}
     for key in dictionary:
         new_dic[key]=dictionary[key].copy()
-    return new_dic
+    return new_dic'''
 
 def tgain(pathogen,eff,K):
-    new_pathogen=deepcopy(pathogen)
+    #changing pathogen
     zk=rk.randint(1,K+1)
-    while zk in new_pathogen[eff]:
+    while zk in eff.targets:
         zk=rk.randint(1,K+1)
-    new_pathogen[eff][zk]=rk.random()
-    return new_pathogen
+    eff.add_target(zk,rk.random())
+    return pathogen
 
 def tremove(pathogen,eff):
-    new_pathogen=deepcopy(pathogen)
-    removethis=rk.choice(new_pathogen[eff].keys())
-    del new_pathogen[eff][removethis]
-    return new_pathogen
+    #changing pathogen
+    removethis=rk.choice(eff.targets.keys())
+    eff.remove_target(removethis)
+    return pathogen
 
-def mutation(pathogen,eff,K,mu1,mu2):
-    new_pathogen=deepcopy(pathogen)
-    for target in new_pathogen[eff]:
+def mutation(pathogen,eff,K,mu,i):
+    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
+    #print mda.strains #needs to be update accordingly
+    if i==0:
+        mda.strains.remove(pathogen)
+        # ^ raise KeyError if not present
+        mda.strains.add(old_pathogen)
+
+    for target in eff.targets:
         y=rk.randn()
-        new_pathogen[eff][target]+=y
-        if new_pathogen[eff][target]<0.0:
-            new_pathogen[eff][target]=0.0
+        eff.targets[target]+=y
+        if eff.targets[target]<0.0:
+            eff.targets[target]=0.0
+        elif eff.targets[target]>1.0:
+            eff.targets[target]=1.0
     ranx=rk.random()
-    if ranx<mu1:
-        new_pathogen=tgain(new_pathogen,eff,K)
-    elif ranx>=mu2:
-        new_pathogen=tremove(new_pathogen,eff)
-    return new_pathogen
+    if ranx<mu[0]:
+        pathogen=tgain(pathogen,eff,K)
+    elif ranx>=mu[1]:
+        pathogen=tremove(pathogen,eff)
+    return pathogen
 
-def deletion(pathogen,eff):
-    new_pathogen={}
-    for key in pathogen:
-        if key!=eff:
-            new_pathogen[key]=pathogen[key].copy()
-    return new_pathogen
+def deletion(pathogen,eff,i):
+    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
+    if i==0:
+        mda.strains.remove(pathogen)
+        # ^ raise KeyError if not present
+        mda.strains.add(old_pathogen)
 
-def duplication(pathogen,eff):
-    new_pathogen=deepcopy(pathogen)
-    l=max(new_pathogen.keys())+1
-    new_pathogen[l]=pathogen[eff].copy()
-    return new_pathogen
+    pathogen.remove_effector(eff)
+    return pathogen
 
-def hgt(pathogen,nto,k):
-    new_pathogen=deepcopy(pathogen)
-    l=max(new_pathogen.keys())+1
-    new_pathogen[l]={}
-    lj=rk.randint(1,nto+1) #number of targeted genes
-    new_pathogen[l]=dict(itr.izip(mda.newhost.NEWHOST(lj,k),rk.random(lj)))
-    return new_pathogen
+def duplication(pathogen,eff,i):
+    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
+    if i==0:
+        mda.strains.remove(pathogen)
+        # ^ raise KeyError if not present
+        mda.strains.add(old_pathogen)
+
+    pathogen.add_effector(eff.__copy__())
+    return pathogen
+
+def hgt(pathogen,nto,k,i):
+    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
+    if i==0:
+        mda.strains.remove(pathogen)
+        # ^ raise KeyError if not present
+        mda.strains.add(old_pathogen)
+
+    new_eff=EffectorGene()
+    lj=rk.randint(1,nto+1)  #number of targeted genes
+    new_eff.targets=dict(itr.izip(mda.newhost.NEWHOST(lj,k),rk.random(lj)))
+    pathogen.add_effector(new_eff)
+    return pathogen
 
 def probabilities(pathogen,host,rates,pop):
     dic_prob={} #keys are eff, values are probabilities
@@ -73,7 +95,8 @@ def probabilities(pathogen,host,rates,pop):
                             math.exp(-effector.g_score))+1-(rates[3]/len(pathogen.eff)))]
     return dic_prob
 
-def events(dic_prob):
+def events(pathogen,host,rates,pop):
+    dic_prob=probabilities(pathogen,host,rates,pop)
     appening={}
     for effector in dic_prob:
         k=rk.random()
@@ -89,17 +112,29 @@ def events(dic_prob):
         appening[effector]=n
     return appening
 
-def transform(pathogen,appening,K,mu1,mu2,nto):
-    for effector in pathogen:
+def transform(pathogen,K,mu,nto,host,rates,pop):
+    appening=events(pathogen,host,rates,pop)
+    #print appening
+    effectors_past=list(pathogen.eff)
+    i=0 #no changes
+    for effector in effectors_past:
         event=appening[effector]
         if event==4:
             pass
         elif event==0:
-            pathogen=mutation(pathogen,effector,K,mu1,mu2)
+            #print 0
+            pathogen=mutation(pathogen,effector,K,mu,i)
+            i=1
         elif event==1:
-            pathogen=duplication(pathogen,effector)
+            #print 1
+            pathogen=duplication(pathogen,effector,i)
+            i=1
         elif event==2:
-            pathogen=deletion(pathogen,effector)
+            #print 2
+            pathogen=deletion(pathogen,effector,i)
+            i=1
         elif event==3:
-            pathogen=hgt(pathogen,nto,K)
+            #print 3
+            pathogen=hgt(pathogen,nto,K,i)
+            i=1
     return pathogen

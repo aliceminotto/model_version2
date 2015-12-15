@@ -6,6 +6,8 @@ def g_p_mapa(host,path):
     for target in host:
         sn=0.0
         for effector in path.eff:
+            #print effector
+            #print type(effector)
             if target in effector.targets:
                 sn+=effector.targets[target]
                 if sn>1:
@@ -32,4 +34,4 @@ def g_p_mapb(host,path):
             if target in host:
                 sn+=effector.targets[target]
         effector.g_score=sn
-    return 
+    return
