@@ -78,60 +78,52 @@ def jumps(j,rngseed,par):
         u=mda.newhost.NEWHOST(l,par[1])
         Hn[jn]=u
     r=0.0
-    #j=0
     while r<=.5:
-        #j+=1
         pathogen_dic=mda.newhost.NEWPATHOGEN(par[1],par[3],par[4],T,[10])
         r=sum(mda.gpmap.g_p_mapa(Hn[0],pathogen_dic).values())/float(len(Hn[0]))
-        #print r
-        #for effector in pathogen_dic.eff:
-        #    print effector.targets.keys()
     pathogen_dic.set_r(r)
     mda.strains.add(pathogen_dic)
-    #path_pop={}
-    #path_pop[0]=[0,[10]]
-    #path_r={}
-    #path_r[0]=r
-    #path_genomes={}
-    #path_genomes[0]=pathogen_dic
-    #path_probs={}
-    #events={}
-    for t in xrange(par[0]*par[7]):
-        jn=0
-        rmax=max([el.r for el in mda.strains])
-        #print rmax
-        flag=0
-        toadd=set()
-        for el in mda.strains:
-            #print mda.strains
-            if el.size[-1]>=0:
-                #path_probs[el]={}
-                #path_probs[el]=mda.transformations.probabilities(el,Hn[jn],par[6],el.size[-1])
-                # ^ pathogen,host,rates,pop Jn needs to be the right host
-                #events[el]={}
-                #events[el]=mda.transformations.events(el,Hn[jn],par[6],el.size[-1])
-                #if any(ev!=4 for ev in events[el].values()):
-                new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1])
-                # ^ pathogen,K,[mu1,mu2],nto,host,rates,size
-                raux=sum(mda.gpmap.g_p_mapa(Hn[jn],new_pth_aux).values())/float(len(Hn[jn]))
-                if raux>rmax: #will be add as a new strain
-                    toadd.add(new_pth_aux)
-                    new_pth_aux.r=raux
-                    flag=1
-                    #####add as a child
+    for jn in xrange(par[0]):
+        print 'jump ',jn,' in progress'
+        #here change r
+        for strain in mda.strains:
+            if strain.size[-1]>0:
+                r=sum(mda.gpmap.g_p_mapa(Hn[jn],strain).values())/float(len(Hn[jn]))
+                strain.r=r
+            else:
+                strain.r=0.0
+        print max([el.r for el in mda.strains])
+        #print Hn[jn]
+        for t in xrange(par[0]*par[7]/par[0]):
+            #print t+(jn*(par[0]*par[7]/par[0]))
+            rmax=max([el.r for el in mda.strains])
+            flag=0
+            toadd=set()
+            for el in mda.strains:
+                #print mda.strains
+                if el.size[-1]>=0:
+                    new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1])
+                    # ^ pathogen,K,[mu1,mu2],nto,host,rates,size
+                    raux=sum(mda.gpmap.g_p_mapa(Hn[jn],new_pth_aux).values())/float(len(Hn[jn]))
+                    if raux>rmax: #will be add as a new strain
+                        toadd.add(new_pth_aux)
+                        new_pth_aux.r=raux
+                        flag=1
+                        el.child(new_pth_aux)
 
-        if flag!=0: #adding new strains to the pool with born time and initial size
-            for new_strain in toadd:
-                new_strain.t=t
-                new_strain.size=[10]
-                mda.strains.add(new_strain)
+            if flag!=0: #adding new strains to the pool with born time and initial size
+                for new_strain in toadd:
+                    new_strain.t=t+(jn*(par[0]*par[7]/par[0]))
+                    new_strain.size=[10]
+                    mda.strains.add(new_strain)
 
-        for el in mda.strains:
-            if el.size[-1]>=0:
-                el.pop_dyn(mda.population.N_calc(mda.strains,el,el.size[-1],par[8]))
+            for el in mda.strains:
+                if el.size[-1]>=0:
+                    el.pop_dyn(mda.population.N_calc(mda.strains,el,el.size[-1],par[8]))
 
     pickle.dump( [[el.t,el.size] for el in mda.strains], open( "testpops.p", "wb" ) )
-    pickle.dump( [[el,el.r] for el in mda.strains], open( "r.p", "wb" ) )
+    pickle.dump( [el.r for el in mda.strains], open( "r.p", "wb" ) )
+
     print("test completed")
 
 def main(): #parallelize
@@ -142,7 +134,7 @@ def main(): #parallelize
     ##########
     #Parameters
     DT=5000
-    NJ=10 #number of jumps
+    NJ=5 #number of jumps
     K=100 #target pool size
     LHmax=50 #max host genome length
     NEO=5 #max numer of effector per pathogen at time 0

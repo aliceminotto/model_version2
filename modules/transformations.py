@@ -26,14 +26,11 @@ def tremove(pathogen,eff):
     eff.remove_target(removethis)
     return pathogen
 
-def mutation(pathogen,eff,K,mu,i):
-    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
+def mutation(pathogen,eff,K,mu):
+    #new_pathogen=pathogen.__deepcopy__() #we change new_pathogen from now on
     #print mda.strains #needs to be update accordingly
-    if i==0:
-        mda.strains.remove(pathogen)
-        # ^ raise KeyError if not present
-        mda.strains.add(old_pathogen)
-
+    #ind=pathogen.eff.index(eff)
+    #new_eff=new_pathogen.eff[ind]
     for target in eff.targets:
         y=rk.randn()
         eff.targets[target]+=y
@@ -48,33 +45,22 @@ def mutation(pathogen,eff,K,mu,i):
         pathogen=tremove(pathogen,eff)
     return pathogen
 
-def deletion(pathogen,eff,i):
-    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
-    if i==0:
-        mda.strains.remove(pathogen)
-        # ^ raise KeyError if not present
-        mda.strains.add(old_pathogen)
-
+def deletion(pathogen,eff):
+    #new_pathogen=pathogen.__deepcopy__() #twe change new_pathogen from now on
+    #ind=pathogen.eff.index(eff)
+    #new_eff=new_pathogen.eff[ind]
     pathogen.remove_effector(eff)
     return pathogen
 
-def duplication(pathogen,eff,i):
-    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
-    if i==0:
-        mda.strains.remove(pathogen)
-        # ^ raise KeyError if not present
-        mda.strains.add(old_pathogen)
-
+def duplication(pathogen,eff):
+    #new_pathogen=pathogen.__deepcopy__() #we change new_pathogen from now on
+    #ind=pathogen.eff.index(eff)
+    #new_eff=new_pathogen.eff[ind]
     pathogen.add_effector(eff.__copy__())
     return pathogen
 
-def hgt(pathogen,nto,k,i):
-    old_pathogen=pathogen.__deepcopy__() #this is the old one, we change pathogen from now on
-    if i==0:
-        mda.strains.remove(pathogen)
-        # ^ raise KeyError if not present
-        mda.strains.add(old_pathogen)
-
+def hgt(pathogen,nto,k):
+    #new_pathogen=pathogen.__deepcopy__() #we change new_pathogen from now on
     new_eff=EffectorGene()
     lj=rk.randint(1,nto+1)  #number of targeted genes
     new_eff.targets=dict(itr.izip(mda.newhost.NEWHOST(lj,k),rk.random(lj)))
@@ -116,25 +102,24 @@ def transform(pathogen,K,mu,nto,host,rates,pop):
     appening=events(pathogen,host,rates,pop)
     #print appening
     effectors_past=list(pathogen.eff)
-    i=0 #no changes
-    for effector in effectors_past:
-        event=appening[effector]
+    new_pathogen=pathogen.__deepcopy__() #we change new_pathogen from now on
+    effector_to_change=list(new_pathogen.eff)
+    for effector in effector_to_change: #they are list and are ordered
+        ind=effector_to_change.index(effector)
+        eff_old=pathogen.eff[ind]
+        event=appening[eff_old]
         if event==4:
             pass
         elif event==0:
             #print 0
-            pathogen=mutation(pathogen,effector,K,mu,i)
-            i=1
+            new_pathogen=mutation(new_pathogen,effector,K,mu)
         elif event==1:
             #print 1
-            pathogen=duplication(pathogen,effector,i)
-            i=1
+            new_pathogen=duplication(new_pathogen,effector)
         elif event==2:
             #print 2
-            pathogen=deletion(pathogen,effector,i)
-            i=1
+            new_pathogen=deletion(new_pathogen,effector)
         elif event==3:
             #print 3
-            pathogen=hgt(pathogen,nto,K,i)
-            i=1
-    return pathogen
+            new_pathogen=hgt(new_pathogen,nto,K)
+    return new_pathogen
