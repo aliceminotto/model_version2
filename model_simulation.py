@@ -106,7 +106,7 @@ def jumps(j,rngseed,par):
             toadd=set()
             for el in mda.strains:
                 #print mda.strains
-                if el.size[-1]>=0:
+                if el.size[-1]>0:
                     new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1])
                     # ^ pathogen,K,[mu1,mu2],nto,host,rates,size
                     raux=sum(mda.gpmap.g_p_mapa(Hn[jn],new_pth_aux).values())/float(len(Hn[jn]))
@@ -117,7 +117,7 @@ def jumps(j,rngseed,par):
                         el.child(new_pth_aux)
 
             for el in mda.strains:
-                if el.size[-1]>=0:
+                if el.size[-1]>0:
                     el.pop_dyn(mda.population.N_calc(mda.strains,el,el.size[-1],par[8]))
 
             if flag!=0: #adding new strains to the pool with born time and initial size
