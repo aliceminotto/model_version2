@@ -99,6 +99,8 @@ def jumps(j,rngseed,par):
         #for x in mda.strains:
             #for y in x.eff:
                 #print y,y.targets.keys(),y.g_score
+        state=rng.get_state()
+        #print state[-1]
         for t in xrange(par[0]*par[7]/par[0]):
             #print t+(jn*(par[0]*par[7]/par[0]))
             rmax=max([el.r for el in mda.strains])
@@ -107,7 +109,7 @@ def jumps(j,rngseed,par):
             for el in mda.strains:
                 #print mda.strains
                 if el.size[-1]>0:
-                    new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1])
+                    new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1],state)
                     # ^ pathogen,K,[mu1,mu2],nto,host,rates,size
                     raux=sum(mda.gpmap.g_p_mapa(Hn[jn],new_pth_aux).values())/float(len(Hn[jn]))
                     if raux>rmax: #will be add as a new strain
@@ -126,8 +128,9 @@ def jumps(j,rngseed,par):
                     new_strain.size=[10]
                     mda.strains.add(new_strain)
 
-        pickle.dump( [[el.t,el.size] for el in mda.strains], open( "testpops"+str(jn)+".p", "wb" ),protocol=2 )
-        pickle.dump( [el.r for el in mda.strains], open( "r"+str(jn)+".p", "wb" ),protocol=2 )
+        print max([el.size[-1] for el in mda.strains])
+        pickle.dump([[el.t,el.size] for el in mda.strains], open("testpops"+str(jn)+".p", "wb"),protocol=2)
+        pickle.dump([el.r for el in mda.strains], open("r"+str(jn)+".p", "wb"),protocol=2)
 
     print("test completed")
 
@@ -139,7 +142,7 @@ def main(): #parallelize
     ##########
     #Parameters
     DT=50
-    NJ=3 #number of jumps
+    NJ=5 #number of jumps
     K=100 #target pool size
     LHmax=50 #max host genome length
     NEO=5 #max numer of effector per pathogen at time 0
