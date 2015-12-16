@@ -89,11 +89,16 @@ def jumps(j,rngseed,par):
         for strain in mda.strains:
             if strain.size[-1]>0:
                 r=sum(mda.gpmap.g_p_mapa(Hn[jn],strain).values())/float(len(Hn[jn]))
+                #print mda.gpmap.g_p_mapa(Hn[jn],strain).values()
                 strain.r=r
             else:
                 strain.r=0.0
         print max([el.r for el in mda.strains])
-        #print Hn[jn]
+        print Hn[jn]
+        #print rng.get_state()
+        #for x in mda.strains:
+            #for y in x.eff:
+                #print y,y.targets.keys(),y.g_score
         for t in xrange(par[0]*par[7]/par[0]):
             #print t+(jn*(par[0]*par[7]/par[0]))
             rmax=max([el.r for el in mda.strains])
@@ -111,18 +116,18 @@ def jumps(j,rngseed,par):
                         flag=1
                         el.child(new_pth_aux)
 
+            for el in mda.strains:
+                if el.size[-1]>=0:
+                    el.pop_dyn(mda.population.N_calc(mda.strains,el,el.size[-1],par[8]))
+
             if flag!=0: #adding new strains to the pool with born time and initial size
                 for new_strain in toadd:
                     new_strain.t=t+(jn*(par[0]*par[7]/par[0]))
                     new_strain.size=[10]
                     mda.strains.add(new_strain)
 
-            for el in mda.strains:
-                if el.size[-1]>=0:
-                    el.pop_dyn(mda.population.N_calc(mda.strains,el,el.size[-1],par[8]))
-
-    pickle.dump( [[el.t,el.size] for el in mda.strains], open( "testpops.p", "wb" ) )
-    pickle.dump( [el.r for el in mda.strains], open( "r.p", "wb" ) )
+        pickle.dump( [[el.t,el.size] for el in mda.strains], open( "testpops"+str(jn)+".p", "wb" ),protocol=2 )
+        pickle.dump( [el.r for el in mda.strains], open( "r"+str(jn)+".p", "wb" ),protocol=2 )
 
     print("test completed")
 
@@ -133,8 +138,8 @@ def main(): #parallelize
     children = []
     ##########
     #Parameters
-    DT=5000
-    NJ=5 #number of jumps
+    DT=50
+    NJ=3 #number of jumps
     K=100 #target pool size
     LHmax=50 #max host genome length
     NEO=5 #max numer of effector per pathogen at time 0

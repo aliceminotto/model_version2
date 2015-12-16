@@ -36,8 +36,6 @@ def mutation(pathogen,eff,K,mu):
         eff.targets[target]+=y
         if eff.targets[target]<0.0:
             eff.targets[target]=0.0
-        elif eff.targets[target]>1.0:
-            eff.targets[target]=1.0
     ranx=rk.random()
     if ranx<mu[0]:
         pathogen=tgain(pathogen,eff,K)
@@ -91,6 +89,7 @@ def events(pathogen,host,rates,pop):
         alfa=k*sum_prob
         som=0.0
         for i in dic_prob[effector]:
+            #print effector
             som+=i
             if som>=alfa:
                 break
@@ -100,7 +99,8 @@ def events(pathogen,host,rates,pop):
 
 def transform(pathogen,K,mu,nto,host,rates,pop):
     appening=events(pathogen,host,rates,pop)
-    #print appening
+    #print len(pathogen.eff)
+    #print appening.values()
     effectors_past=list(pathogen.eff)
     new_pathogen=pathogen.__deepcopy__() #we change new_pathogen from now on
     effector_to_change=list(new_pathogen.eff)
