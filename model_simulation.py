@@ -14,12 +14,15 @@ from numpy import random as rng
 import modA as mda
 
 class Genome:
+    newid=itr.count().next
+
     def __init__(self,effectors,time0,size): #effector is a set
         self.eff=effectors
         self.children=set() #changed from dict cause each genome has .t
         self.t=time0
         self.size=size
         self.r=None
+        self.id=Genome.newid() #it should be new also when i do a copy
 
     def __deepcopy__(self):
         G=Genome([x.__copy__() for x in self.eff],self.t,self.size)
@@ -82,6 +85,7 @@ def jumps(j,rngseed,par):
         pathogen_dic=mda.newhost.NEWPATHOGEN(par[1],par[3],par[4],T,[10])
         r=sum(mda.gpmap.g_p_mapa(Hn[0],pathogen_dic).values())/float(len(Hn[0]))
     pathogen_dic.set_r(r)
+    print pathogen_dic.id,'***************************'
     mda.strains.add(pathogen_dic)
     for jn in xrange(par[0]):
         print 'jump ',jn,' in progress'
@@ -99,9 +103,9 @@ def jumps(j,rngseed,par):
         #for x in mda.strains:
             #for y in x.eff:
                 #print y,y.targets.keys(),y.g_score
-        state=rng.get_state()
+        #state=rng.get_state()
         #print state[-1]
-        for t in xrange(par[0]*par[7]/par[0]):
+        for t in xrange(par[7]):
             #print t+(jn*(par[0]*par[7]/par[0]))
             rmax=max([el.r for el in mda.strains])
             flag=0
@@ -109,7 +113,7 @@ def jumps(j,rngseed,par):
             for el in mda.strains:
                 #print mda.strains
                 if el.size[-1]>0:
-                    new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1],state)
+                    new_pth_aux=mda.transformations.transform(el,par[1],par[5],par[4],Hn[jn],par[6],el.size[-1])
                     # ^ pathogen,K,[mu1,mu2],nto,host,rates,size
                     raux=sum(mda.gpmap.g_p_mapa(Hn[jn],new_pth_aux).values())/float(len(Hn[jn]))
                     if raux>rmax: #will be add as a new strain
@@ -124,7 +128,7 @@ def jumps(j,rngseed,par):
 
             if flag!=0: #adding new strains to the pool with born time and initial size
                 for new_strain in toadd:
-                    new_strain.t=t+(jn*(par[0]*par[7]/par[0]))
+                    new_strain.t=t+(jn*(par[7]))
                     new_strain.size=[10]
                     mda.strains.add(new_strain)
 
@@ -141,8 +145,8 @@ def main(): #parallelize
     children = []
     ##########
     #Parameters
-    DT=50
-    NJ=5 #number of jumps
+    DT=100
+    NJ=3 #number of jumps
     K=100 #target pool size
     LHmax=50 #max host genome length
     NEO=5 #max numer of effector per pathogen at time 0

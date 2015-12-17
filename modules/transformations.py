@@ -97,8 +97,8 @@ def events(pathogen,host,rates,pop):
         appening[effector]=n
     return appening
 
-def transform(pathogen,K,mu,nto,host,rates,pop,state):
-    rk.set_state(state)
+def transform(pathogen,K,mu,nto,host,rates,pop):
+    #rk.set_state(state)
     appening=events(pathogen,host,rates,pop)
     #print len(pathogen.eff)
     #print appening.values()
